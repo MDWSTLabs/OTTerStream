@@ -27,13 +27,37 @@ android {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = rootProject.file("app/release-key.jks")
+            if (keystoreFile.exists()) {
+                val keystoreProperties = java.util.Properties()
+                keystoreProperties.load(rootProject.file("app/keystore.properties").inputStream())
+
+                storeFile = keystoreFile
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
+            
+            buildConfigField("String", "API_BASE_URL", "\"https://api.example.com/\"")
+            buildConfigField("String", "APP_VERSION", "\"0.1.0\"")
         }
         debug {
             isMinifyEnabled = false
+            isShrinkResources = false
+            
+            buildConfigField("String", "API_BASE_URL", "\"http://localhost:8080/\"")
+            buildConfigField("String", "APP_VERSION", "\"0.1.0-debug\"")
         }
     }
 
@@ -44,6 +68,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    lint {
+        disable += "MissingTranslation"
+        disable += "ExtraTranslation"
     }
 }
 
